@@ -1,35 +1,36 @@
 pkgname=obs-backgroundremoval
 
-pkgver=0.3.0
+pkgver=0.3.1
 pkgrel=2
 _onnx_version=1.9.0
-_onnx_runtime=onnxruntime-linux-x64-${_onnx_version}
-sha256sums=('874e09c03b622054fb8e001873318bf631b4f9767adc383b3327032a92dd496b'
-            '0345f45f222208344406d79a6db3280ed2ccc884dc1e064ce6e6951ed4c70606')
+_onnx_runtime=onnxruntime-linux-x64-gpu-${_onnx_version}
+sha256sums=('SKIP'
+            '2fb0e4ed01aec68860cdea372a51db3d0648c21e90432458884db674ea576dd8')
 _source="${pkgname}-${pkgver}-beta"
 
 arch=(x86_64)
-url='https://github.com/lukasmichel/obs-backgroundremoval'
+url='https://github.com/lukasmichel/obs-backgroundremoval-1.git'
 pkgdesc='Background removal plugin for OBS studio (precomopiled onnxruntime)'
 license=(MIT custom)
 depends=(obs-studio opencv)
 makedepends=(cmake)
-source=("${_source}.tar.gz::$url/archive/refs/tags/v${pkgver}-beta.tar.gz"
+source=("git+https://github.com/lukasmichel/obs-backgroundremoval-1.git"
         "https://github.com/microsoft/onnxruntime/releases/download/v${_onnx_version}/${_onnx_runtime}.tgz")
 
-prepare() {
+#prepare() {
   # build from archive, not git. Version set during build()
-  sed -i "s/^version_from_git/#&/" "${_source}/CMakeLists.txt"
-}
+  #sed -i "s/^version_from_git/#&/" "${_source}/CMakeLists.txt"
+#}
 
 build() {
-  cd "$_source"
+  cd "obs-backgroundremoval-1"
   # set rpath to avoid installing onnxruntime globally
   cmake -B build -DVERSION="${pkgver}" -DobsIncludePath=/usr/include/obs/ \
            -DCMAKE_INSTALL_PREFIX:PATH=/usr \
            -DOnnxruntime_INCLUDE_DIRS="$srcdir/$_onnx_runtime/include/" -DOnnxruntime_LIBRARIES="$srcdir/$_onnx_runtime/lib/libonnxruntime.so" \
            -DOnnxruntime_INCLUDE_DIR="$srcdir/$_onnx_runtime/include/" \
-           -DCMAKE_INSTALL_RPATH="/usr/lib/obs-backgroundremoval"
+           -DCMAKE_INSTALL_RPATH="/usr/lib/obs-backgroundremoval" \
+           -WITH_CUDA=ON
   cd build
   make
 }
