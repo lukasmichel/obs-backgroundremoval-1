@@ -1,0 +1,4 @@
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DobsIncludePath=/usr/include/obs/ -DCMAKE_INSTALL_PREFIX:PATH=/usr -DOnnxruntime_INCLUDE_DIRS=/home/lukas/Documents/obs-backgroundremoval/build/onnxruntime-gpu/include -DOnnxruntime_LIBRARIES=/home/lukas/Documents/obs-backgroundremoval/build/onnxruntime-gpu/lib/libonnxruntime.so -DOnnxruntime_INCLUDE_DIR=/home/lukas/Documents/obs-backgroundremoval/build/onnxruntime-gpu/include/ -DCMAKE_INSTALL_RPATH=/usr/lib/obs-backgroundremoval -DWITH_CUDA=ON -DCMAKE_INSTALL_RPATH=/usr/lib/obs-backgroundremoval -DCMAKE_DEPENDS_USE_COMPILER=FALSE -G "CodeBlocks - Unix Makefiles" /home/lukas/Documents/obs-backgroundremoval
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/lukas/Documents/obs-backgroundremoval/cmake-build-release

@@ -150,12 +150,12 @@ static obs_properties_t *filter_properties(void *data)
 		OBS_COMBO_FORMAT_STRING);
 
 	obs_property_list_add_string(p_use_gpu, obs_module_text("CPU"), USEGPU_CPU);
-#if _WIN32
+//#if _WIN32
 #ifdef WITH_CUDA
 	obs_property_list_add_string(p_use_gpu, obs_module_text("GPU - CUDA"), USEGPU_CUDA);
-#else
-	obs_property_list_add_string(p_use_gpu, obs_module_text("GPU - DirectML"), USEGPU_DML);
-#endif
+//#else
+//	obs_property_list_add_string(p_use_gpu, obs_module_text("GPU - DirectML"), USEGPU_DML);
+//#endif
 #endif
 
 	obs_property_t *p_model_select = obs_properties_add_list(
@@ -222,13 +222,13 @@ static void createOrtSession(struct background_removal_filter *tf) {
 #endif
 
 	try {
-#if _WIN32
+//#if _WIN32
 #ifdef WITH_CUDA
         Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(sessionOptions, 0));
 #else
         Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(sessionOptions, 0));
 #endif
-#endif
+//#endif
 		tf->session.reset(new Ort::Session(*tf->env, tf->modelFilepath, sessionOptions));
 	} catch (const std::exception& e) {
 		blog(LOG_ERROR, "%s", e.what());

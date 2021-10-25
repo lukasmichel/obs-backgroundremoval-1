@@ -41,7 +41,8 @@ if(WIN32 OR MSVC)
 else()
     # Apple or linux
     if (WITH_CUDA)
-        message(FATAL "Cannot use CUDA on non-Windows builds")
+        # message(FATAL "Cannot use CUDA on non-Windows builds")
+        add_compile_definitions("WITH_CUDA=1")
     endif()
 endif()
 

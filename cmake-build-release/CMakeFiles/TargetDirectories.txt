@@ -1,0 +1,7 @@
+/home/lukas/Documents/obs-backgroundremoval/cmake-build-release/CMakeFiles/install/local.dir
+/home/lukas/Documents/obs-backgroundremoval/cmake-build-release/CMakeFiles/install.dir
+/home/lukas/Documents/obs-backgroundremoval/cmake-build-release/CMakeFiles/list_install_components.dir
+/home/lukas/Documents/obs-backgroundremoval/cmake-build-release/CMakeFiles/rebuild_cache.dir
+/home/lukas/Documents/obs-backgroundremoval/cmake-build-release/CMakeFiles/edit_cache.dir
+/home/lukas/Documents/obs-backgroundremoval/cmake-build-release/CMakeFiles/install/strip.dir
+/home/lukas/Documents/obs-backgroundremoval/cmake-build-release/CMakeFiles/obs-backgroundremoval.dir

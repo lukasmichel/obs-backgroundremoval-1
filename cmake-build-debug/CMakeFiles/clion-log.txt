@@ -1,0 +1,11 @@
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_DEPENDS_USE_COMPILER=FALSE -G "CodeBlocks - Unix Makefiles" /home/lukas/Documents/obs-backgroundremoval
+CMake Error at /usr/share/cmake-3.21/Modules/FindPackageHandleStandardArgs.cmake:230 (message):
+  Could NOT find LibObs (missing: LIBOBS_INCLUDE_DIR)
+Call Stack (most recent call first):
+  /usr/share/cmake-3.21/Modules/FindPackageHandleStandardArgs.cmake:594 (_FPHSA_FAILURE_MESSAGE)
+  external/FindLibObs.cmake:97 (find_package_handle_standard_args)
+  CMakeLists.txt:69 (find_package)
+
+
+-- Configuring incomplete, errors occurred!
+See also "/home/lukas/Documents/obs-backgroundremoval/cmake-build-debug/CMakeFiles/CMakeOutput.log".

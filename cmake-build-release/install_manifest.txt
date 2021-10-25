@@ -1,0 +1,6 @@
+/usr/lib/obs-plugins/obs-backgroundremoval.so
+/usr/share/obs/obs-plugins/obs-backgroundremoval/locale/en-US.ini
+/usr/share/obs/obs-plugins/obs-backgroundremoval/SINet_Softmax_simple.onnx
+/usr/share/obs/obs-plugins/obs-backgroundremoval/mediapipe.onnx
+/usr/share/obs/obs-plugins/obs-backgroundremoval/modnet_simple.onnx
+/usr/share/obs/obs-plugins/obs-backgroundremoval/selfie_segmentation.onnx
