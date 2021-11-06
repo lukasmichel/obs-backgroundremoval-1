@@ -1,7 +1,7 @@
 pkgname=obs-backgroundremoval
 
 
-pkgver=0.3.1
+pkgver=0.4.0
 pkgrel=2
 _onnx_version=1.9.0
 _onnx_runtime=onnxruntime-linux-x64-gpu-${_onnx_version}

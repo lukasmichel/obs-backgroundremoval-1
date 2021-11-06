@@ -18,7 +18,7 @@ set(MACOS_BUNDLEID "com.example.obs-backgroundremoval")
 # Replace `me@contoso.com` with the maintainer email address you want to put in Linux packages
 set(LINUX_MAINTAINER_EMAIL "roy.shil@gmail.com")
 
-option(WITH_CUDA "Build with CUDA support." OFF)
+option(WITH_CUDA "Build with CUDA support." ON)
 if(WITH_CUDA)
     add_compile_definitions("WITH_CUDA=1")
 endif()

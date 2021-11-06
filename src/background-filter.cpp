@@ -27,28 +27,28 @@
 #include "plugin-macros.generated.h"
 #include "Model.h"
 
+const char *MODEL_SINET = "SINet_Softmax_simple.onnx";
+const char *MODEL_MODNET = "modnet_simple.onnx";
+const char *MODEL_MEDIAPIPE = "mediapipe.onnx";
+const char *MODEL_SELFIE = "selfie_segmentation.onnx";
+const char *MODEL_RVM = "rvm_mobilenetv3_fp32.onnx";
 
-const char* MODEL_SINET = "SINet_Softmax_simple.onnx";
-const char* MODEL_MODNET = "modnet_simple.onnx";
-const char* MODEL_MEDIAPIPE = "mediapipe.onnx";
-const char* MODEL_SELFIE = "selfie_segmentation.onnx";
-const char* MODEL_RVM = "rvm_mobilenetv3_fp32.onnx";
+const char *USEGPU_CPU = "cpu";
+const char *USEGPU_DML = "dml";
+const char *USEGPU_CUDA = "cuda";
 
-const char* USEGPU_CPU = "cpu";
-const char* USEGPU_DML = "dml";
-const char* USEGPU_CUDA = "cuda";
-
-struct background_removal_filter {
+struct background_removal_filter
+{
 	std::unique_ptr<Ort::Session> session;
 	std::unique_ptr<Ort::Env> env;
-	std::vector<const char*> inputNames;
-	std::vector<const char*> outputNames;
+	std::vector<const char *> inputNames;
+	std::vector<const char *> outputNames;
 	std::vector<Ort::Value> inputTensor;
 	std::vector<Ort::Value> outputTensor;
-	std::vector<std::vector<int64_t> > inputDims;
-	std::vector<std::vector<int64_t> > outputDims;
-	std::vector<std::vector<float> > outputTensorValues;
-	std::vector<std::vector<float> > inputTensorValues;
+	std::vector<std::vector<int64_t>> inputDims;
+	std::vector<std::vector<int64_t>> outputDims;
+	std::vector<std::vector<float>> outputTensorValues;
+	std::vector<std::vector<float>> inputTensorValues;
 	Ort::MemoryInfo memoryInfo;
 	float threshold = 0.5f;
 	cv::Scalar backgroundColor{0, 0, 0};
@@ -60,28 +60,25 @@ struct background_removal_filter {
 	std::unique_ptr<Model> model;
 
 	// Use the media-io converter to both scale and convert the colorspace
-	video_scaler_t* scalerToBGR;
-	video_scaler_t* scalerFromBGR;
+	video_scaler_t *scalerToBGR;
+	video_scaler_t *scalerFromBGR;
 
 	cv::Mat backgroundMask;
 	int maskEveryXFrames = 1;
 	int maskEveryXFramesCount = 0;
 
-
 #if _WIN32
-	const wchar_t* modelFilepath = nullptr;
+	const wchar_t *modelFilepath = nullptr;
 #else
-	const char* modelFilepath = nullptr;
+	const char *modelFilepath = nullptr;
 #endif
 };
-
 
 static const char *filter_getname(void *unused)
 {
 	UNUSED_PARAMETER(unused);
 	return "Background Removal";
 }
-
 
 /**                   PROPERTIES                     */
 
@@ -134,12 +131,16 @@ static obs_properties_t *filter_properties(void *data)
 		OBS_COMBO_FORMAT_STRING);
 
 	obs_property_list_add_string(p_use_gpu, obs_module_text("CPU"), USEGPU_CPU);
-//#if _WIN32
+#if _WIN32
 #ifdef WITH_CUDA
 	obs_property_list_add_string(p_use_gpu, obs_module_text("GPU - CUDA"), USEGPU_CUDA);
-//#else
-//	obs_property_list_add_string(p_use_gpu, obs_module_text("GPU - DirectML"), USEGPU_DML);
-//#endif
+#else
+	obs_property_list_add_string(p_use_gpu, obs_module_text("GPU - DirectML"), USEGPU_DML);
+#endif
+#else
+#ifdef WITH_CUDA
+	obs_property_list_add_string(p_use_gpu, obs_module_text("GPU - CUDA"), USEGPU_CUDA);
+#endif
 #endif
 
 	obs_property_t *p_model_select = obs_properties_add_list(
@@ -167,7 +168,8 @@ static obs_properties_t *filter_properties(void *data)
 	return props;
 }
 
-static void filter_defaults(obs_data_t *settings) {
+static void filter_defaults(obs_data_t *settings)
+{
 	obs_data_set_default_double(settings, "threshold", 0.5);
 	obs_data_set_default_double(settings, "contour_filter", 0.05);
 	obs_data_set_default_double(settings, "smooth_contour", 0.5);
@@ -178,19 +180,22 @@ static void filter_defaults(obs_data_t *settings) {
 	obs_data_set_default_int(settings, "mask_every_x_frames", 1);
 }
 
-static void createOrtSession(struct background_removal_filter *tf) {
+static void createOrtSession(struct background_removal_filter *tf)
+{
 
 	Ort::SessionOptions sessionOptions;
 
 	sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-	if (tf->useGPU != USEGPU_CPU) {
+	if (tf->useGPU != USEGPU_CPU)
+	{
 		sessionOptions.DisableMemPattern();
 		sessionOptions.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
 	}
 
-	char* modelFilepath_rawPtr = obs_module_file(tf->modelSelection.c_str());
+	char *modelFilepath_rawPtr = obs_module_file(tf->modelSelection.c_str());
 
-	if (modelFilepath_rawPtr == nullptr) {
+	if (modelFilepath_rawPtr == nullptr)
+	{
 		blog(LOG_ERROR, "Unable to get model filename %s from plugin.", tf->modelSelection.c_str());
 		return;
 	}
@@ -206,75 +211,85 @@ static void createOrtSession(struct background_removal_filter *tf) {
 	tf->modelFilepath = modelFilepath_s.c_str();
 #endif
 
-	try {
-//#if _WIN32
+	try
+	{
+#if _WIN32
 #ifdef WITH_CUDA
-        Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(sessionOptions, 0));
+		Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(sessionOptions, 0));
 #else
-        Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(sessionOptions, 0));
+		Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(sessionOptions, 0));
 #endif
-//#endif
+#else
+#ifdef WITH_CUDA
+		//Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(sessionOptions, 0));
+		Ort::ThrowOnError(AppendExecutionProvider_CUDA(sessionOptions, 0));
+#endif
+#endif
 		tf->session.reset(new Ort::Session(*tf->env, tf->modelFilepath, sessionOptions));
-	} catch (const std::exception& e) {
+	}
+	catch (const std::exception &e)
+	{
 		blog(LOG_ERROR, "%s", e.what());
 		return;
 	}
 
 	Ort::AllocatorWithDefaultOptions allocator;
 
-  tf->model->populateInputOutputNames(tf->session, tf->inputNames, tf->outputNames);
+	tf->model->populateInputOutputNames(tf->session, tf->inputNames, tf->outputNames);
 
-  if (!tf->model->populateInputOutputShapes(tf->session, tf->inputDims, tf->outputDims)) {
-    blog(LOG_ERROR, "Unable to get model input and output shapes");
-    return;
-  }
+	if (!tf->model->populateInputOutputShapes(tf->session, tf->inputDims, tf->outputDims))
+	{
+		blog(LOG_ERROR, "Unable to get model input and output shapes");
+		return;
+	}
 
-  for (size_t i = 0; i < tf->inputNames.size(); i++) {
-    blog(LOG_INFO, "Model %s input %d: name %s shape (%d dim) %d x %d x %d x %d",
-      tf->modelSelection.c_str(), (int)i,
-      tf->inputNames[i],
-      (int)tf->inputDims[i].size(),
-      (int)tf->inputDims[i][0],
-      ((int)tf->inputDims[i].size() > 1) ? (int)tf->inputDims[i][1] : 0,
-      ((int)tf->inputDims[i].size() > 2) ? (int)tf->inputDims[i][2] : 0,
-      ((int)tf->inputDims[i].size() > 3) ? (int)tf->inputDims[i][3] : 0
-    );
-  }
-  for (size_t i = 0; i < tf->outputNames.size(); i++) {
-    blog(LOG_INFO, "Model %s output %d: name %s shape (%d dim) %d x %d x %d x %d",
-      tf->modelSelection.c_str(), (int)i,
-      tf->outputNames[i],
-      (int)tf->outputDims[i].size(),
-      (int)tf->outputDims[i][0],
-      ((int)tf->outputDims[i].size() > 1) ? (int)tf->outputDims[i][1] : 0,
-      ((int)tf->outputDims[i].size() > 2) ? (int)tf->outputDims[i][2] : 0,
-      ((int)tf->outputDims[i].size() > 3) ? (int)tf->outputDims[i][3] : 0);
-  }
+	for (size_t i = 0; i < tf->inputNames.size(); i++)
+	{
+		blog(LOG_INFO, "Model %s input %d: name %s shape (%d dim) %d x %d x %d x %d",
+			 tf->modelSelection.c_str(), (int)i,
+			 tf->inputNames[i],
+			 (int)tf->inputDims[i].size(),
+			 (int)tf->inputDims[i][0],
+			 ((int)tf->inputDims[i].size() > 1) ? (int)tf->inputDims[i][1] : 0,
+			 ((int)tf->inputDims[i].size() > 2) ? (int)tf->inputDims[i][2] : 0,
+			 ((int)tf->inputDims[i].size() > 3) ? (int)tf->inputDims[i][3] : 0);
+	}
+	for (size_t i = 0; i < tf->outputNames.size(); i++)
+	{
+		blog(LOG_INFO, "Model %s output %d: name %s shape (%d dim) %d x %d x %d x %d",
+			 tf->modelSelection.c_str(), (int)i,
+			 tf->outputNames[i],
+			 (int)tf->outputDims[i].size(),
+			 (int)tf->outputDims[i][0],
+			 ((int)tf->outputDims[i].size() > 1) ? (int)tf->outputDims[i][1] : 0,
+			 ((int)tf->outputDims[i].size() > 2) ? (int)tf->outputDims[i][2] : 0,
+			 ((int)tf->outputDims[i].size() > 3) ? (int)tf->outputDims[i][3] : 0);
+	}
 
 	// Allocate buffers
-  tf->model->allocateTensorBuffers(
-    tf->inputDims,
-    tf->outputDims,
-    tf->outputTensorValues,
-  	tf->inputTensorValues,
-    tf->inputTensor,
-    tf->outputTensor
-  );
+	tf->model->allocateTensorBuffers(
+		tf->inputDims,
+		tf->outputDims,
+		tf->outputTensorValues,
+		tf->inputTensorValues,
+		tf->inputTensor,
+		tf->outputTensor);
 }
 
-
-static void destroyScalers(struct background_removal_filter *tf) {
+static void destroyScalers(struct background_removal_filter *tf)
+{
 	blog(LOG_INFO, "Destroy scalers.");
-	if (tf->scalerToBGR != nullptr) {
+	if (tf->scalerToBGR != nullptr)
+	{
 		video_scaler_destroy(tf->scalerToBGR);
 		tf->scalerToBGR = nullptr;
 	}
-	if (tf->scalerFromBGR != nullptr) {
+	if (tf->scalerFromBGR != nullptr)
+	{
 		video_scaler_destroy(tf->scalerFromBGR);
 		tf->scalerFromBGR = nullptr;
 	}
 }
-
 
 static void filter_update(void *data, obs_data_t *settings)
 {
@@ -286,45 +301,48 @@ static void filter_update(void *data, obs_data_t *settings)
 	tf->backgroundColor.val[1] = (double)((color >> 8) & 0x0000ff);
 	tf->backgroundColor.val[2] = (double)(color & 0x0000ff);
 
-	tf->contourFilter         = (float)obs_data_get_double(settings, "contour_filter");
-	tf->smoothContour         = (float)obs_data_get_double(settings, "smooth_contour");
-	tf->feather               = (float)obs_data_get_double(settings, "feather");
-	tf->maskEveryXFrames      = (int)obs_data_get_int(settings, "mask_every_x_frames");
+	tf->contourFilter = (float)obs_data_get_double(settings, "contour_filter");
+	tf->smoothContour = (float)obs_data_get_double(settings, "smooth_contour");
+	tf->feather = (float)obs_data_get_double(settings, "feather");
+	tf->maskEveryXFrames = (int)obs_data_get_int(settings, "mask_every_x_frames");
 	tf->maskEveryXFramesCount = (int)(0);
-
 
 	const std::string newUseGpu = obs_data_get_string(settings, "useGPU");
 	const std::string newModel = obs_data_get_string(settings, "model_select");
 
 	if (tf->modelSelection.empty() ||
-        tf->modelSelection != newModel ||
-        tf->useGPU != newUseGpu)
+		tf->modelSelection != newModel ||
+		tf->useGPU != newUseGpu)
 	{
 		// Re-initialize model if it's not already the selected one or switching inference device
 		tf->modelSelection = newModel;
 		tf->useGPU = newUseGpu;
 		destroyScalers(tf);
 
-		if (tf->modelSelection == MODEL_SINET) {
+		if (tf->modelSelection == MODEL_SINET)
+		{
 			tf->model.reset(new ModelSINET);
 		}
-		if (tf->modelSelection == MODEL_MODNET) {
+		if (tf->modelSelection == MODEL_MODNET)
+		{
 			tf->model.reset(new ModelMODNET);
 		}
-		if (tf->modelSelection == MODEL_SELFIE) {
+		if (tf->modelSelection == MODEL_SELFIE)
+		{
 			tf->model.reset(new ModelSelfie);
 		}
-		if (tf->modelSelection == MODEL_MEDIAPIPE) {
+		if (tf->modelSelection == MODEL_MEDIAPIPE)
+		{
 			tf->model.reset(new ModelMediaPipe);
 		}
-		if (tf->modelSelection == MODEL_RVM) {
+		if (tf->modelSelection == MODEL_RVM)
+		{
 			tf->model.reset(new ModelRVM);
 		}
 
 		createOrtSession(tf);
 	}
 }
-
 
 /**                   FILTER CORE                     */
 
@@ -335,53 +353,54 @@ static void *filter_create(obs_data_t *settings, obs_source_t *source)
 	std::string instanceName{"background-removal-inference"};
 	tf->env.reset(new Ort::Env(OrtLoggingLevel::ORT_LOGGING_LEVEL_ERROR, instanceName.c_str()));
 
-    tf->modelSelection = MODEL_MEDIAPIPE;
+	tf->modelSelection = MODEL_MEDIAPIPE;
 	filter_update(tf, settings);
 
 	return tf;
 }
 
-
 static void initializeScalers(
 	cv::Size frameSize,
 	enum video_format frameFormat,
-	struct background_removal_filter *tf
-) {
+	struct background_removal_filter *tf)
+{
 
-	struct video_scale_info dst{
+	struct video_scale_info dst
+	{
 		VIDEO_FORMAT_BGR3,
-		(uint32_t)frameSize.width,
-		(uint32_t)frameSize.height,
-		VIDEO_RANGE_DEFAULT,
-		VIDEO_CS_DEFAULT
+			(uint32_t)frameSize.width,
+			(uint32_t)frameSize.height,
+			VIDEO_RANGE_DEFAULT,
+			VIDEO_CS_DEFAULT
 	};
-	struct video_scale_info src{
+	struct video_scale_info src
+	{
 		frameFormat,
-		(uint32_t)frameSize.width,
-		(uint32_t)frameSize.height,
-		VIDEO_RANGE_DEFAULT,
-		VIDEO_CS_DEFAULT
+			(uint32_t)frameSize.width,
+			(uint32_t)frameSize.height,
+			VIDEO_RANGE_DEFAULT,
+			VIDEO_CS_DEFAULT
 	};
 
 	// Check if scalers already defined and release them
 	destroyScalers(tf);
 
 	blog(LOG_INFO, "Initialize scalers. Size %d x %d",
-		frameSize.width, frameSize.height);
+		 frameSize.width, frameSize.height);
 
 	// Create new scalers
 	video_scaler_create(&tf->scalerToBGR, &dst, &src, VIDEO_SCALE_DEFAULT);
 	video_scaler_create(&tf->scalerFromBGR, &src, &dst, VIDEO_SCALE_DEFAULT);
 }
 
-
 static cv::Mat convertFrameToBGR(
 	struct obs_source_frame *frame,
-	struct background_removal_filter *tf
-) {
+	struct background_removal_filter *tf)
+{
 	const cv::Size frameSize(frame->width, frame->height);
 
-	if (tf->scalerToBGR == nullptr) {
+	if (tf->scalerToBGR == nullptr)
+	{
 		// Lazy initialize the frame scale & color converter
 		initializeScalers(frameSize, frame->format, tf);
 	}
@@ -389,107 +408,115 @@ static cv::Mat convertFrameToBGR(
 	cv::Mat imageBGR(frameSize, CV_8UC3);
 	const uint32_t bgrLinesize = (uint32_t)(imageBGR.cols * imageBGR.elemSize());
 	video_scaler_scale(tf->scalerToBGR,
-		&(imageBGR.data), &(bgrLinesize),
-		frame->data, frame->linesize);
+					   &(imageBGR.data), &(bgrLinesize),
+					   frame->data, frame->linesize);
 
 	return imageBGR;
 }
 
-
 static void convertBGRToFrame(
-  const cv::Mat& imageBGR,
-  struct obs_source_frame *frame,
-  struct background_removal_filter *tf
-) {
-  if (tf->scalerFromBGR == nullptr) {
-    // Lazy initialize the frame scale & color converter
-    initializeScalers(cv::Size(frame->width, frame->height), frame->format, tf);
-  }
+	const cv::Mat &imageBGR,
+	struct obs_source_frame *frame,
+	struct background_removal_filter *tf)
+{
+	if (tf->scalerFromBGR == nullptr)
+	{
+		// Lazy initialize the frame scale & color converter
+		initializeScalers(cv::Size(frame->width, frame->height), frame->format, tf);
+	}
 
-  const uint32_t rgbLinesize = (uint32_t)(imageBGR.cols * imageBGR.elemSize());
-  video_scaler_scale(tf->scalerFromBGR,
-    frame->data, frame->linesize,
-    &(imageBGR.data), &(rgbLinesize));
+	const uint32_t rgbLinesize = (uint32_t)(imageBGR.cols * imageBGR.elemSize());
+	video_scaler_scale(tf->scalerFromBGR,
+					   frame->data, frame->linesize,
+					   &(imageBGR.data), &(rgbLinesize));
 }
-
 
 static void processImageForBackground(
-  struct background_removal_filter *tf,
-  const cv::Mat& imageBGR,
-  cv::Mat& backgroundMask)
+	struct background_removal_filter *tf,
+	const cv::Mat &imageBGR,
+	cv::Mat &backgroundMask)
 {
-  if (tf->session.get() == nullptr) {
-      // Onnx runtime session is not initialized. Problem in initialization
-      return;
-  }
-  try {
-    // To RGB
-    cv::Mat imageRGB;
-    cv::cvtColor(imageBGR, imageRGB, cv::COLOR_BGR2RGB);
+	if (tf->session.get() == nullptr)
+	{
+		// Onnx runtime session is not initialized. Problem in initialization
+		return;
+	}
+	try
+	{
+		// To RGB
+		cv::Mat imageRGB;
+		cv::cvtColor(imageBGR, imageRGB, cv::COLOR_BGR2RGB);
 
-    // Resize to network input size
-    uint32_t inputWidth, inputHeight;
-    tf->model->getNetworkInputSize(tf->inputDims, inputWidth, inputHeight);
+		// Resize to network input size
+		uint32_t inputWidth, inputHeight;
+		tf->model->getNetworkInputSize(tf->inputDims, inputWidth, inputHeight);
 
-    cv::Mat resizedImageRGB;
-    cv::resize(imageRGB, resizedImageRGB, cv::Size(inputWidth, inputHeight));
+		cv::Mat resizedImageRGB;
+		cv::resize(imageRGB, resizedImageRGB, cv::Size(inputWidth, inputHeight));
 
-    // Prepare input to nework
-    cv::Mat resizedImage, preprocessedImage;
-    resizedImageRGB.convertTo(resizedImage, CV_32F);
+		// Prepare input to nework
+		cv::Mat resizedImage, preprocessedImage;
+		resizedImageRGB.convertTo(resizedImage, CV_32F);
 
-    tf->model->prepareInputToNetwork(resizedImage, preprocessedImage);
+		tf->model->prepareInputToNetwork(resizedImage, preprocessedImage);
 
-    tf->model->loadInputToTensor(preprocessedImage, inputWidth, inputHeight, tf->inputTensorValues);
+		tf->model->loadInputToTensor(preprocessedImage, inputWidth, inputHeight, tf->inputTensorValues);
 
-    // Run network inference
-    tf->model->runNetworkInference(tf->session, tf->inputNames, tf->outputNames, tf->inputTensor, tf->outputTensor);
+		// Run network inference
+		tf->model->runNetworkInference(tf->session, tf->inputNames, tf->outputNames, tf->inputTensor, tf->outputTensor);
 
-    // Get output
-    // Map network output mask to cv::Mat
-    cv::Mat outputImage = tf->model->getNetworkOutput(tf->outputDims, tf->outputTensorValues, tf->inputDims, tf->inputTensorValues);
+		// Get output
+		// Map network output mask to cv::Mat
+		cv::Mat outputImage = tf->model->getNetworkOutput(tf->outputDims, tf->outputTensorValues, tf->inputDims, tf->inputTensorValues);
 
-    // Post-process output
-    tf->model->postprocessOutput(outputImage);
+		// Post-process output
+		tf->model->postprocessOutput(outputImage);
 
-    if (tf->modelSelection == MODEL_SINET || tf->modelSelection == MODEL_MEDIAPIPE) {
-      backgroundMask = outputImage > tf->threshold;
-    } else {
-      backgroundMask = outputImage < tf->threshold;
-    }
+		if (tf->modelSelection == MODEL_SINET || tf->modelSelection == MODEL_MEDIAPIPE)
+		{
+			backgroundMask = outputImage > tf->threshold;
+		}
+		else
+		{
+			backgroundMask = outputImage < tf->threshold;
+		}
 
-    // Contour processing
-    if (tf->contourFilter > 0.0 && tf->contourFilter < 1.0) {
-      std::vector<std::vector<cv::Point> > contours;
-      findContours(backgroundMask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-      std::vector<std::vector<cv::Point> > filteredContours;
-      const int64_t contourSizeThreshold = (int64_t)(backgroundMask.total() * tf->contourFilter);
-      for (auto& contour : contours) {
-        if (cv::contourArea(contour) > contourSizeThreshold) {
-          filteredContours.push_back(contour);
-        }
-      }
-      backgroundMask.setTo(0);
-      drawContours(backgroundMask, filteredContours, -1, cv::Scalar(255), -1);
-    }
+		// Contour processing
+		if (tf->contourFilter > 0.0 && tf->contourFilter < 1.0)
+		{
+			std::vector<std::vector<cv::Point>> contours;
+			findContours(backgroundMask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+			std::vector<std::vector<cv::Point>> filteredContours;
+			const int64_t contourSizeThreshold = (int64_t)(backgroundMask.total() * tf->contourFilter);
+			for (auto &contour : contours)
+			{
+				if (cv::contourArea(contour) > contourSizeThreshold)
+				{
+					filteredContours.push_back(contour);
+				}
+			}
+			backgroundMask.setTo(0);
+			drawContours(backgroundMask, filteredContours, -1, cv::Scalar(255), -1);
+		}
 
-    // Resize the size of the mask back to the size of the original input.
-    cv::resize(backgroundMask, backgroundMask, imageBGR.size());
+		// Resize the size of the mask back to the size of the original input.
+		cv::resize(backgroundMask, backgroundMask, imageBGR.size());
 
-    // Smooth mask with a fast filter (box).
-    if (tf->smoothContour > 0.0) {
-      int k_size = (int)(100 * tf->smoothContour);
-      cv::boxFilter(backgroundMask, backgroundMask, backgroundMask.depth(), cv::Size(k_size, k_size));
-      backgroundMask = backgroundMask > 128;
-    }
-  }
-  catch(const std::exception& e) {
-    blog(LOG_ERROR, "%s", e.what());
-  }
+		// Smooth mask with a fast filter (box).
+		if (tf->smoothContour > 0.0)
+		{
+			int k_size = (int)(100 * tf->smoothContour);
+			cv::boxFilter(backgroundMask, backgroundMask, backgroundMask.depth(), cv::Size(k_size, k_size));
+			backgroundMask = backgroundMask > 128;
+		}
+	}
+	catch (const std::exception &e)
+	{
+		blog(LOG_ERROR, "%s", e.what());
+	}
 }
 
-
-static struct obs_source_frame * filter_render(void *data, struct obs_source_frame *frame)
+static struct obs_source_frame *filter_render(void *data, struct obs_source_frame *frame)
 {
 	struct background_removal_filter *tf = reinterpret_cast<background_removal_filter *>(data);
 
@@ -499,11 +526,14 @@ static struct obs_source_frame * filter_render(void *data, struct obs_source_fra
 	cv::Mat backgroundMask(imageBGR.size(), CV_8UC1, cv::Scalar(255));
 
 	tf->maskEveryXFramesCount = ++(tf->maskEveryXFramesCount) % tf->maskEveryXFrames;
-	if (tf->maskEveryXFramesCount != 0 && !tf->backgroundMask.empty()) {
+	if (tf->maskEveryXFramesCount != 0 && !tf->backgroundMask.empty())
+	{
 		// We are skipping processing of the mask for this frame.
 		// Get the background mask previously generated.
 		tf->backgroundMask.copyTo(backgroundMask);
-	} else {
+	}
+	else
+	{
 		// Process the image to find the mask.
 		processImageForBackground(tf, imageBGR, backgroundMask);
 
@@ -513,8 +543,10 @@ static struct obs_source_frame * filter_render(void *data, struct obs_source_fra
 	}
 
 	// Apply the mask back to the main image.
-	try {
-		if (tf->feather > 0.0) {
+	try
+	{
+		if (tf->feather > 0.0)
+		{
 			// If we're going to feather/alpha blend, we need to do some processing that
 			// will combine the blended "foreground" and "masked background" images onto the main image.
 			cv::Mat maskFloat;
@@ -536,13 +568,16 @@ static struct obs_source_frame * filter_render(void *data, struct obs_source_fra
 			// Add the foreground and background images together, rescale back to an 8bit integer image
 			// and apply onto the main image.
 			cv::Mat(tmpImage + tmpBackground).convertTo(imageBGR, CV_8UC3);
-		} else {
+		}
+		else
+		{
 			// If we're not feathering/alpha blending, we can
 			// apply the mask as-is back onto the main image.
 			imageBGR.setTo(tf->backgroundColor, backgroundMask);
 		}
 	}
-	catch(const std::exception& e) {
+	catch (const std::exception &e)
+	{
 		blog(LOG_ERROR, "%s", e.what());
 	}
 
@@ -551,18 +586,16 @@ static struct obs_source_frame * filter_render(void *data, struct obs_source_fra
 	return frame;
 }
 
-
 static void filter_destroy(void *data)
 {
 	struct background_removal_filter *tf = reinterpret_cast<background_removal_filter *>(data);
 
-	if (tf) {
+	if (tf)
+	{
 		destroyScalers(tf);
 		bfree(tf);
 	}
 }
-
-
 
 struct obs_source_info background_removal_filter_info = {
 	.id = "background_removal",

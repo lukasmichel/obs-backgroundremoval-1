@@ -13,3 +13,4 @@
 *.generated.*
 cmake-build-release
 cmake-build-release/**/
+obs-backgroundremoval-1
