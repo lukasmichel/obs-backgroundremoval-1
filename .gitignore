@@ -11,3 +11,5 @@
 
 # ignore generated files
 *.generated.*
+cmake-build-release
+cmake-build-release/**/

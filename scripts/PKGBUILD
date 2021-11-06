@@ -30,14 +30,14 @@ build() {
            -DOnnxruntime_INCLUDE_DIRS="$srcdir/$_onnx_runtime/include/" -DOnnxruntime_LIBRARIES="$srcdir/$_onnx_runtime/lib/libonnxruntime.so" \
            -DOnnxruntime_INCLUDE_DIR="$srcdir/$_onnx_runtime/include/" \
            -DCMAKE_INSTALL_RPATH="/usr/lib/obs-backgroundremoval" \
-           -WITH_CUDA=ON
+           -DWITH_CUDA=ON
   cd build
   make
 }
 
 package() {
-  make -C "$_source/build" DESTDIR="$pkgdir" install
-  install -Dt "$pkgdir/usr/share/licenses/obs-backgroundremoval" "$_source/LICENSE"
+  make -C "obs-backgroundremoval-1/build" DESTDIR="$pkgdir" install
+  install -Dt "$pkgdir/usr/share/licenses/obs-backgroundremoval" "obs-backgroundremoval-1/LICENSE"
 
   # install onnxruntime
   cd "$_onnx_runtime"
