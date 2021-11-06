@@ -4,9 +4,11 @@ pkgver=0.3.1
 pkgrel=2
 _onnx_version=1.9.0
 _onnx_runtime=onnxruntime-linux-x64-gpu-${_onnx_version}
+_onnxdir=onnxruntime-linux-x64-${_onnx_version}
 sha256sums=('SKIP'
             '2fb0e4ed01aec68860cdea372a51db3d0648c21e90432458884db674ea576dd8')
 _source="${pkgname}-${pkgver}-beta"
+
 
 arch=(x86_64)
 url='https://github.com/lukasmichel/obs-backgroundremoval-1.git'
@@ -14,8 +16,10 @@ pkgdesc='Background removal plugin for OBS studio (precomopiled onnxruntime)'
 license=(MIT custom)
 depends=(obs-studio opencv)
 makedepends=(cmake)
+
 source=("git+https://github.com/lukasmichel/obs-backgroundremoval-1.git"
         "https://github.com/microsoft/onnxruntime/releases/download/v${_onnx_version}/${_onnx_runtime}.tgz")
+
 
 #prepare() {
   # build from archive, not git. Version set during build()
