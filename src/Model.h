@@ -108,7 +108,7 @@ public:
     inputDims[0] = inputTensorInfo.GetShape();
 
     if (inputDims[0].size() < 3 || outputDims[0].size() < 3) {
-      blog(LOG_ERROR, "Input or output tensor dims are < 3. input = %d, output = %d",
+      blog(LOG_ERROR, "Input or output tensor dims are < 3. input = %ld, output = %ld",
         inputDims.size(), outputDims.size());
       return false;
     }
