@@ -2,7 +2,7 @@ pkgname=obs-backgroundremoval
 
 
 pkgver=0.4.0
-pkgrel=4
+pkgrel=6
 _onnx_version=1.9.0
 _onnx_runtime=onnxruntime-linux-x64-gpu-${_onnx_version}
 _onnxdir=onnxruntime-linux-x64-${_onnx_version}
@@ -18,7 +18,7 @@ license=(MIT custom)
 depends=(obs-studio opencv)
 makedepends=(cmake)
 
-source=("git+https://github.com/lukasmichel/obs-backgroundremoval-1.git"
+source=("git+https://github.com/mproffitt/obs-backgroundremoval.git"
         "https://github.com/microsoft/onnxruntime/releases/download/v${_onnx_version}/${_onnx_runtime}.tgz")
 
 

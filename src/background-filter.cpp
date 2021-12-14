@@ -222,7 +222,7 @@ static void createOrtSession(struct background_removal_filter *tf)
 #else
 #ifdef WITH_CUDA
         if (tf->useGPU != USEGPU_CPU)
-		Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(sessionOptions, 0));
+			Ort::ThrowOnError(SessionOptionsAppendExecutionProvider_CUDA(sessionOptions, 0));
 #endif
 #endif
 		tf->session.reset(new Ort::Session(*tf->env, tf->modelFilepath, sessionOptions));
