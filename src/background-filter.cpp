@@ -1,6 +1,6 @@
 #include <obs-module.h>
 #include <media-io/video-scaler.h>
-
+#define WITH_CUDA
 #if defined(__APPLE__)
 #include <onnxruntime/core/session/onnxruntime_cxx_api.h>
 #include <onnxruntime/core/providers/cpu/cpu_provider_factory.h>
@@ -223,7 +223,7 @@ static void createOrtSession(struct background_removal_filter *tf)
 #ifdef WITH_CUDA
         if (tf->useGPU != USEGPU_CPU)
 			//Ort::ThrowOnError(AppendExecutionProvider_CUDA(sessionOptions, 0));
-			sessionOptions=AppendExecutionProvider_CUDA({});
+			sessionOptions=SessionOptions::AppendExecutionProvider_CUDA({});
 #endif
 #endif
 		tf->session.reset(new Ort::Session(*tf->env, tf->modelFilepath, sessionOptions));
